@@ -1,4 +1,11 @@
 module.exports = {
+  css: {
+    loaderOptions: {
+      sass: {
+        prependData: `@import "~@/assets/var.scss";`,
+      },
+    },
+  },
   pluginOptions: {
     electronBuilder: {
       builderOptions: {

@@ -1,6 +1,6 @@
 'use strict';
 
-import { app, protocol, BrowserWindow } from 'electron';
+import { app, protocol, BrowserWindow, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import path from 'path';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
@@ -18,6 +18,8 @@ async function createWindow() {
   win = new BrowserWindow({
     width: 800,
     height: 600,
+    frame: false,
+    transparent: true,
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
@@ -78,6 +80,34 @@ app.on('ready', async () => {
   }
   registerLocalResourceProtocol();
   createWindow();
+});
+
+// 关闭窗口
+ipcMain.on('close', () => {
+  if (!win) return;
+  win.close();
+  app.quit();
+});
+
+ipcMain.on('size', (hevent, width: number, height: number, animate: boolean) => {
+  if (!win) return;
+  win.setContentSize(width, height, animate);
+});
+
+// 最小化窗口
+ipcMain.on('minimize', () => {
+  if (!win) return;
+  win.minimize();
+});
+
+//最大化窗口
+ipcMain.on('maximize', () => {
+  if (!win) return;
+  if (win.isMaximized()) {
+    win.unmaximize();
+  } else {
+    win.maximize();
+  }
 });
 
 function registerLocalResourceProtocol() {
