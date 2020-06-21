@@ -30,7 +30,7 @@ install:
   - npm install -g xvfb-maybe
   - yarn
 script:
-  - yarn run electron:build
+  - yarn run electron:pack
 branches:
   only:
     - master
