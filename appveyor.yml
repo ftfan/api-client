@@ -24,6 +24,6 @@ install:
   - node --version
 
 build_script:
-  - yarn electron:build
+  - yarn electron:pack
 
 test: off
