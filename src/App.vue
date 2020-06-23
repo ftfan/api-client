@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <div class="control">
+      <div v-if="$route.name !== 'Login'" class="exit GetTired" @click="LoginOut">退出登录</div>
       <div class="bg g-abs g-drag">{{ $AppStore.state.title }}</div>
       <div class="el-icon-minus GetTired" @click="WinAction('minimize')"></div>
       <div class="el-icon-close GetTired" @click="WinAction('close')"></div>
@@ -12,13 +13,18 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Vue } from 'vue-property-decorator';
 import { ipcRenderer } from 'electron';
 
 @Component
 export default class App extends Vue {
   WinAction(action: string) {
     ipcRenderer.send(action);
+  }
+
+  LoginOut() {
+    this.$UserStore.LoginOut();
+    this.$router.replace({ name: 'Login' });
   }
 }
 </script>
@@ -72,11 +78,17 @@ export default class App extends Vue {
   margin: 4px;
   .bg {
     right: 70px;
-    padding-left: 70px;
+    left: 70px;
     text-align: center;
   }
   .GetTired {
     margin-right: 10px;
+  }
+  .exit {
+    float: left;
+    font-size: 12px;
+    padding-left: 4px;
+    cursor: pointer;
   }
 }
 </style>

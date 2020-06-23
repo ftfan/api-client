@@ -1,17 +1,21 @@
 <template>
-  <div class="login">
+  <div class="login" v-loading="$isloading">
     <div class="tips" style="margin-top:30px;">数据仅存储于本机，不会上传到任何服务器</div>
     <div class="tips">密码用于数据加密解密</div>
     <div class="tips">忘记密码？只能 <el-button type="danger" @click="ResetAll" plain size="mini">重置</el-button></div>
     <el-input @keyup.enter="Submit" style="width:200px;margin-top:30px;" autofocus :placeholder="pwdTip" v-model="pwd" type="password" show-password></el-input>
     <br />
-    <el-button @click="Submit" style="margin-top:30px;" icon="el-icon-right" type="success" circle></el-button>
+    <el-button @click="Submit" style="margin-top:30px;" icon="el-icon-right" type="success">
+      {{ IsLogin ? '登录' : '设置密码' }}
+    </el-button>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Vue } from 'vue-property-decorator';
 import { ipcRenderer } from 'electron';
+import { sleep } from '../lib/utils';
+import { Loading } from '@/lib/loading';
 
 @Component
 export default class Home extends Vue {
@@ -30,11 +34,15 @@ export default class Home extends Vue {
     ipcRenderer.send('size', 500, 400, true);
   }
 
+  @Loading()
   async ResetAll() {
     const value: any = await this.$prompt('确定重置软件所有数据，请输入：确认重置');
-    if (value && value.value === '确认重置') this.$AppStore.Reset();
+    if (value && value.value === '确认重置') {
+      await Promise.all([sleep(500), this.$AppStore.Reset()]);
+    }
   }
 
+  @Loading()
   async Submit() {
     // 校验密码
     if (!this.IsLogin) {
@@ -54,6 +62,7 @@ export default class Home extends Vue {
 .login {
   text-align: center;
   background-color: $color-main;
+  overflow: hidden;
 }
 .tips {
   text-align: center;

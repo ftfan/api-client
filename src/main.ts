@@ -20,6 +20,7 @@ process.on('unhandledRejection', (error) => {
 
 import '@/data/App';
 import '@/data/User';
+import './lib/loading';
 
 new Vue({
   router,
