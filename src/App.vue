@@ -1,7 +1,8 @@
 <template>
   <div id="app">
     <div class="control">
-      <div v-if="$route.name !== 'Login'" class="exit GetTired" @click="LoginOut">退出登录</div>
+      <div v-if="$route.name === 'Home'" class="exit GetTired" @click="GoBack">登出</div>
+      <div v-else-if="$route.name !== 'Login'" class="exit GetTired el-icon-s-home" @click="GoBack"></div>
       <div class="bg g-abs g-drag">{{ $AppStore.state.title }}</div>
       <div class="el-icon-minus GetTired" @click="WinAction('minimize')"></div>
       <div class="el-icon-close GetTired" @click="WinAction('close')"></div>
@@ -9,6 +10,19 @@
     <!-- <div class="ui-item"></div>
     <div class="ui-item"></div> -->
     <router-view class="g-abs router-view"></router-view>
+
+    <el-dialog :visible.sync="$AppStore.state.ChooseKey">
+      <div class="clearfix">
+        <el-card class="box-card fl" shadow="hover" @click.native="SubmitRun(data)" v-for="data in $UserStore.localState.SecretKeys" :key="data.Key">
+          <div slot="header" class="clearfix">
+            <el-tag size="mini">{{ data.Key }}</el-tag>
+          </div>
+          <div>
+            备注：<el-tag size="small" v-if="data.Desc">{{ data.Desc }}</el-tag>
+          </div>
+        </el-card>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -22,9 +36,20 @@ export default class App extends Vue {
     ipcRenderer.send(action);
   }
 
-  LoginOut() {
-    this.$UserStore.LoginOut();
-    this.$router.replace({ name: 'Login' });
+  GoBack() {
+    if (this.$route.name === 'Home') {
+      this.$UserStore.LoginOut();
+      this.$router.replace({ name: 'Login' });
+    } else {
+      this.$router.replace({ name: 'Home' });
+    }
+    // this.$UserStore.LoginOut();
+    // this.$router.replace({ name: 'Login' });
+  }
+
+  SubmitRun(data: any) {
+    this.$AppStore.state.ChooseKey = false;
+    this.$AppStore.state.ChooseKeyResolve(data);
   }
 }
 </script>
@@ -84,11 +109,19 @@ export default class App extends Vue {
   .GetTired {
     margin-right: 10px;
   }
+  .el-icon-minus,
+  .el-icon-close {
+    cursor: pointer;
+  }
   .exit {
     float: left;
     font-size: 12px;
-    padding-left: 4px;
+    padding-left: 8px;
     cursor: pointer;
+    &.el-icon-s-home {
+      font-size: 20px;
+      padding-top: 6px;
+    }
   }
 }
 </style>

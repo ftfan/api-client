@@ -1,6 +1,6 @@
 'use strict';
 
-import { app, protocol, BrowserWindow, ipcMain } from 'electron';
+import { app, protocol, BrowserWindow, ipcMain, powerSaveBlocker } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import path from 'path';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
@@ -21,6 +21,7 @@ async function createWindow() {
     frame: false,
     transparent: true,
     webPreferences: {
+      webSecurity: false,
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
       nodeIntegration: (process.env.ELECTRON_NODE_INTEGRATION as unknown) as boolean,
@@ -39,7 +40,17 @@ async function createWindow() {
     autoUpdater.checkForUpdatesAndNotify();
   }
 
+  let id = powerSaveBlocker.start('prevent-app-suspension');
+
+  // 每分钟检查系统是否会睡眠
+  setInterval(() => {
+    if (!powerSaveBlocker.isStarted(id)) {
+      id = powerSaveBlocker.start('prevent-app-suspension');
+    }
+  }, 6000);
+
   win.on('closed', () => {
+    powerSaveBlocker.stop(id);
     win = null;
   });
 }

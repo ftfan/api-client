@@ -33,6 +33,6 @@ export const DecryptStrByPassword = async (password: string, result: string) => 
   await sleep(16); // 因为加密解密过程消耗资源，为了避免卡顿，异步处理
   const MattsRSAkey = cryptico.generateRSAKey(password, Bits);
   const res = cryptico.decrypt(result, MattsRSAkey);
-  if (res.status !== 'success') return new CodeObj(Code.Error, res, res.status);
+  if (res.status !== 'success') return new CodeObj(Code.Error, res, '密码错误:' + res.status);
   return new CodeObj(Code.Success, res.plaintext);
 };

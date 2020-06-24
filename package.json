@@ -1,6 +1,6 @@
 {
   "name": "api-client",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service electron:serve",
@@ -15,6 +15,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "axios": "^0.19.2",
     "core-js": "^3.6.5",
     "cryptico": "^1.0.2",
     "vue": "^2.6.11",

@@ -1,5 +1,5 @@
 <template>
-  <div class="login" v-loading="$isloading">
+  <div class="login" v-loading="loading">
     <div class="tips" style="margin-top:30px;">数据仅存储于本机，不会上传到任何服务器</div>
     <div class="tips">密码用于数据加密解密</div>
     <div class="tips">忘记密码？只能 <el-button type="danger" @click="ResetAll" plain size="mini">重置</el-button></div>
@@ -19,6 +19,7 @@ import { Loading } from '@/lib/loading';
 
 @Component
 export default class Home extends Vue {
+  loading = false;
   pwd = '';
 
   get IsLogin() {
@@ -53,7 +54,7 @@ export default class Home extends Vue {
     const login = await this.$UserStore.Login(this.pwd);
     if (login.Error()) return this.$message.error(login.Msg);
     this.pwd = '';
-    this.$router.replace({ name: 'Home' });
+    this.$router.push({ name: 'Home' });
   }
 }
 </script>

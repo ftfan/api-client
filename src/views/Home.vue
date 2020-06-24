@@ -1,5 +1,5 @@
 <template>
-  <div class="Home clearfix" v-loading="$isloading">
+  <div class="Home clearfix" v-loading="loading">
     <div v-for="item in List" :key="item.Name" class="GetTired" @click="Action(item.Name)">
       <div class="name">{{ item.Name }}</div>
     </div>
@@ -17,7 +17,8 @@ import { ipcRenderer, shell } from 'electron';
   },
 })
 export default class Home extends Vue {
-  List = [{ Name: '秘钥管理' }, { Name: '策略管理' }, { Name: '联系我们' }, { Name: '项目源码' }];
+  loading = false;
+  List = [{ Name: '配置管理' }, { Name: '策略管理' }, { Name: '联系我们' }, { Name: '项目源码' }];
 
   Action(type: string) {
     switch (type) {
@@ -25,6 +26,10 @@ export default class Home extends Vue {
         return shell.openExternal('https://github.com/ftfan/api-client');
       case '联系我们':
         return shell.openExternal('https://fmex.fun/#/About');
+      case '配置管理':
+        return this.$router.push({ name: 'Setting' });
+      case '策略管理':
+        return this.$router.push({ name: 'Runner' });
     }
   }
   mounted() {
