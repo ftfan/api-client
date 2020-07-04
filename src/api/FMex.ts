@@ -61,6 +61,10 @@ export namespace FMex {
       return this.api.post(`/v3/contracts/orders/${id}/cancel`).then((res) => res.data as CodeObj<any>);
     }
 
+    async SetLeverage(symbol: string, leverage: number) {
+      return this.api.post(`/v3/contracts/positions/${symbol}/leverage`, { leverage }).then((res) => res.data as CodeObj<any>);
+    }
+
     /**
      * K线数据
      * @param CoinSymbol BTCUSD_P
@@ -485,6 +489,15 @@ export namespace FMex {
     };
     ts: 1580802053662;
   }
+
+  export interface WsTradeRes {
+    type: string; // 'trade.ethbtc';
+    id: number;
+    amount: number;
+    ts: number;
+    side: SideEnum;
+    price: number;
+  }
   /**
    * ws 事件
    */
@@ -494,6 +507,7 @@ export namespace FMex {
     ticker: EventMapDto<[CoinSymbol], WsTickerRes>;
     depth: EventMapDto<[Level, CoinSymbol], WsDepthRes>;
     'depth-delta': EventMapDto<[Level, CoinSymbol], WsDepthRes>;
+    trade: EventMapDto<[CoinSymbol], WsTradeRes>;
 
     // 账户信息
     account: EventMapDto<[], WsAccountRes>;

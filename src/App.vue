@@ -46,7 +46,8 @@ export default class App extends Vue {
     } else {
       // 策略
       if (this.$route.path.match('/Runner/')) {
-        ipcRenderer.send('main-win-show');
+        this.$router.replace({ name: 'Home' });
+        // ipcRenderer.send('main-win-show');
       } else {
         this.$router.replace({ name: 'Home' });
       }

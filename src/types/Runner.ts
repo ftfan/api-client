@@ -29,3 +29,15 @@ export class RunnerSetting {
   //   });
   // }
 }
+
+export class FMexNoOrder {
+  Side = 'buy';
+  OrderId = '';
+  MinPercent = 1; // 挂单百分比
+  MaxPercent = 2; // 挂单百分比
+  Amount = 1; // 挂单数量
+  Data: any = null; // 数据
+  OrderNum = 0;
+  EndNum = 0; // 被成交次数
+  Id = (Math.random() * 10000).toString(16);
+}

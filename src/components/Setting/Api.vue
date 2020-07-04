@@ -70,7 +70,7 @@ export default class SettingApi extends Vue {
 
   CreateApiEmit() {
     if (this.$AppStore.localState.NetEnv === 'fmextest.net') {
-      this.NewApi.Desc = '测试网只读API';
+      this.NewApi.Desc = '这是个只读权限的 API，仅供预览';
       this.NewApi.Key = MyConfig.TestApi.Key;
       this.NewApi.Secret = MyConfig.TestApi.Secret;
     }
@@ -103,7 +103,7 @@ export default class SettingApi extends Vue {
     if (this.EditerApi && this.EditerApi.Secret === this.NewApi.Secret) {
       const pwd = await this.$UserStore.CheckPassword(this.pwd);
       if (pwd.Error()) return this.$message.error(pwd.Msg);
-      const sec = await this.$UserStore.SecretParse(this.EditerApi, this.pwd);
+      const sec = await this.$UserStore.SecretParse(this.EditerApi.Secret, this.pwd);
       if (sec.Error()) return this.$message.error(sec.Msg);
       Secret = sec.Data;
     }

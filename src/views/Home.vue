@@ -41,7 +41,7 @@ export default class Home extends Vue {
 
 <style scoped lang="scss">
 .Home {
-  background-color: rgba($color-main, 0.5);
+  background-color: rgba($color-main, 0.8);
   padding-top: 100px;
   > div {
     float: left;

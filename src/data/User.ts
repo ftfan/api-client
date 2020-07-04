@@ -5,12 +5,18 @@ import { IdCreate } from '@/lib/utils';
 import { AES } from '@/lib/aes';
 import { SecretKey } from '@/types/Secret';
 import { FMex } from '@/api/FMex';
+import lodash from 'lodash';
 
 class Store extends Data {
-  readonly state = {};
+  readonly state = {
+    fmex: null as FMex.Api | null,
+    fmex_key_secret: '',
+  };
 
   readonly sessionState = {
     login: false,
+
+    pwd: '',
   };
 
   readonly localState = {
@@ -53,6 +59,7 @@ class Store extends Data {
     const pwed = await this.CheckPassword(pwd);
     if (pwed.Error()) return pwed;
     this.sessionState.login = true;
+    this.sessionState.pwd = pwd;
     return new CodeObj(Code.Success);
   }
 
@@ -115,15 +122,15 @@ class Store extends Data {
     this.sessionState.login = false;
   }
 
-  async SecretParse(sk: SecretKey, pwd: string) {
+  SecretParse = lodash.memoize(async (Secret: string, pwd: string) => {
     const res = await this.CheckPassword(pwd);
     if (res.Error()) return res;
-    const sec = await AES.Decrypt(pwd, sk.Secret);
+    const sec = await AES.Decrypt(pwd, Secret);
     return sec;
-  }
+  });
 
   async TestApi(sk: SecretKey, pwd: string) {
-    const res = await this.SecretParse(sk, pwd);
+    const res = await this.SecretParse(sk.Secret, pwd);
     if (res.Error()) return res;
     const fmex = new FMex.Api(sk.Key, res.Data!);
     const data = await fmex.FetchBalance();
@@ -137,6 +144,22 @@ class Store extends Data {
     if (index === -1) return success;
     this.localState.SecretKeys.splice(index, 1);
     return success;
+  }
+
+  async GetFirstApiHandler(): Promise<CodeObj<FMex.Api>> {
+    if (!this.sessionState.login) return Promise.resolve(new CodeObj(Code.Error, null as any, '未登录'));
+
+    const api = this.localState.SecretKeys[0];
+    if (!api) return Promise.resolve(new CodeObj(Code.Error, null as any, '还未设置 api ！'));
+
+    const fmex_key_secret = api.Key + api.Secret;
+    if (fmex_key_secret === this.state.fmex_key_secret && this.state.fmex) return Promise.resolve(new CodeObj(Code.Success, this.state.fmex));
+
+    const sec = await this.SecretParse(api.Secret, this.sessionState.pwd);
+    if (sec.Error()) return sec as any;
+    this.state.fmex = new FMex.Api(api.Key, sec.Data);
+    this.state.fmex_key_secret = fmex_key_secret;
+    return Promise.resolve(new CodeObj(Code.Success, this.state.fmex));
   }
 }
 

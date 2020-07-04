@@ -39,7 +39,7 @@ export default class Setting extends Vue {
 .Setting {
   text-align: center;
   padding: 20px;
-  background-color: rgba($color-main, 0.3);
+  background-color: rgba($color-main, 0.8);
   overflow: hidden;
   > div {
     display: inline-block;

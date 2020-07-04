@@ -22,7 +22,7 @@ import lodash from 'lodash';
 
 export const Setting = new RunnerSetting({
   Name: 'BTCUSD',
-  Sort: 1,
+  Sort: 2,
   Text: 'BTCUSD 行情',
   VuePath: '/Runner/BTCUSD',
 });
@@ -73,7 +73,7 @@ export default class BTCUSD extends Vue {
 
   @Loading()
   async mounted() {
-    ipcRenderer.send('main-win-size', 800, 740, true);
+    // ipcRenderer.send('main-win-size', 800, 740, true);
     // await this.ResolutionChange();
     this.ResetView();
   }
@@ -110,5 +110,6 @@ export default class BTCUSD extends Vue {
 
 <style scoped lang="scss">
 .BTCUSD {
+  text-align: left;
 }
 </style>

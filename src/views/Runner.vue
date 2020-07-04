@@ -29,7 +29,7 @@ requireComponent.keys().forEach((fileName: any) => {
   components[mod.Setting.Name] = mod.default;
 });
 
-Cpts.sort((a, b) => b.Sort - a.Sort);
+Cpts.sort((a, b) => a.Sort - b.Sort);
 
 @Component({
   components: { ...components },
@@ -45,6 +45,7 @@ export default class Runner extends Vue {
   mounted() {
     // 启动行情监控程序
     this.$DataStore.Run();
+    ipcRenderer.send('main-win-size', 800, 740, true);
   }
 
   OpenRunner(cpt: RunnerSetting) {
@@ -57,7 +58,7 @@ export default class Runner extends Vue {
 <style scoped lang="scss">
 .Runner {
   text-align: center;
-  background-color: rgba($color-main, 0.3);
+  background-color: rgba($color-main, 0.8);
   overflow: hidden;
   padding: 10px;
   .item {

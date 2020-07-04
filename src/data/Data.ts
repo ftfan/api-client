@@ -19,6 +19,8 @@ class Store extends Data {
     CoinSymbol: 'btcusd_p',
     candles: [] as FMex.CandelRes[],
     candlesMap: new Map<number, FMex.CandelRes>(),
+    ticker: null as null | FMex.WsTickerRes,
+    // trade: null as null | FMex.WsTradeRes,
 
     DepthData: DepthData,
 
@@ -68,8 +70,10 @@ class Store extends Data {
     res.data.forEach((candle) => {
       this.state.candlesMap.set(candle.id, candle);
     });
-    const sub1 = wss.sub('candle', FMex.Resolution.M1, CoinSymbol);
-    sub1.ondata((data) => {
+
+    // 监听K线数据
+    const subCandle = wss.sub('candle', FMex.Resolution.M1, CoinSymbol);
+    subCandle.ondata((data) => {
       const old = this.state.candlesMap.get(data.id);
       if (old) {
         Object.assign(old, data);
@@ -79,10 +83,23 @@ class Store extends Data {
       this.state.candles.push(data);
     });
 
-    const sub2 = wss.sub('depth', FMex.DepthLevel.L20, CoinSymbol);
-    sub2.ondata((data) => {
+    // 监听盘口深度数据
+    const subDepth = wss.sub('depth', FMex.DepthLevel.L20, CoinSymbol);
+    subDepth.ondata((data) => {
       this.state.DepthData = data;
     });
+
+    // 监听最新价格
+    const subTicker = wss.sub('ticker', CoinSymbol);
+    subTicker.ondata((data) => {
+      this.state.ticker = data;
+    });
+
+    // 监听最近成交
+    // const subTrade = wss.sub('trade', CoinSymbol);
+    // subTrade.ondata((data) => {
+    //   this.state.trade = data;
+    // });
   }
 
   ListenIndex() {
