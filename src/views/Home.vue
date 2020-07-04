@@ -32,8 +32,9 @@ export default class Home extends Vue {
         return this.$router.push({ name: 'Runner' });
     }
   }
-  mounted() {
-    ipcRenderer.send('size', 500, 600, true);
+  async mounted() {
+    await this.$nextTick();
+    ipcRenderer.send('main-win-size', 500, 600, true);
   }
 }
 </script>

@@ -10,14 +10,14 @@ export namespace FMex {
     api!: AxiosInstance;
     constructor(AccessKey: string, AccessSecret: string) {
       const _axios = (this.api = axios.create({
-        baseURL: location.hostname === 'localhost' ? '/fmex' : Vue.AppStore.localState.Setting.FMexApiBaseUrl,
+        baseURL: location.hostname === 'localhost' ? '/fmex' : `https://${Vue.AppStore.localState.Setting.FMexApiBaseUrl}`,
         timeout: 10000,
       }));
 
       _axios.interceptors.request.use(
         (config) => {
           ApiSign(config, {
-            DomainReal: Vue.AppStore.localState.Setting.FMexApiBaseUrlSign,
+            DomainReal: `https://${Vue.AppStore.localState.Setting.FMexApiBaseUrlSign}`,
             AccessKey,
             AccessSecret,
           });
@@ -76,14 +76,15 @@ export namespace FMex {
   /**
    * FMex 的长连接
    */
-  class Ws {
+  export class Ws {
     private ws!: WebSocket; // 句柄存储
     private HeartTimer = 0 as any;
     private HeartTime = 15000; // 每隔15秒心跳
     private wsOpen!: Promise<any>; // 使用ws的时候需要等待
     private event = new Vue(); // 使用 Vue ，作为事件管理者
     private subList: string[] = [];
-    private baseUrl = `wss://${Vue.AppStore.localState.Setting.FMexWssBaseUrl}/v2/ws`;
+    // private baseUrl = `wss://www.fmextest.net/api/web/ws`;
+    baseUrl = '';
     // 最后一次呼吸返回
     LastHeartbeat = {
       id: '',
@@ -92,8 +93,7 @@ export namespace FMex {
       gap: 0,
     };
     // constructor(baseUrl = 'wss://api.fmex.d73e969.com/v2/ws') {
-    constructor(baseUrl = `wss://${Vue.AppStore.localState.Setting.FMexWssBaseUrl}/v2/ws`) {
-      this.baseUrl = baseUrl;
+    constructor() {
       // 触发心跳事件（后续每隔 HeartTime 跳动一次）
       setInterval(() => this.Heartbeat(), this.HeartTime);
       this.wssConn();
@@ -109,7 +109,7 @@ export namespace FMex {
     }
 
     private wssConn() {
-      this.ws = new WebSocket(this.baseUrl);
+      this.ws = new WebSocket(this.baseUrl || `wss://${Vue.AppStore.localState.Setting.FMexWssBaseUrl}/v2/ws`);
       this.wsOpen = new Promise((resolve) => (this.ws.onopen = resolve));
       this.ws.onmessage = this.onmessage.bind(this);
       this.ws.onclose = this.onclose.bind(this);
@@ -274,7 +274,7 @@ export namespace FMex {
     }
   }
 
-  export const Wss = new Ws();
+  // export const Wss = new Ws();
 
   /**
    * 监听
@@ -489,7 +489,8 @@ export namespace FMex {
    * ws 事件
    */
   export interface WsSubMap {
-    candle: EventMapDto<[Resolution, '', CoinSymbol], WsCandleRes>;
+    index: EventMapDto<[string], { index: [number, number] }>;
+    candle: EventMapDto<[Resolution, CoinSymbol], WsCandleRes>;
     ticker: EventMapDto<[CoinSymbol], WsTickerRes>;
     depth: EventMapDto<[Level, CoinSymbol], WsDepthRes>;
     'depth-delta': EventMapDto<[Level, CoinSymbol], WsDepthRes>;
@@ -498,6 +499,17 @@ export namespace FMex {
     account: EventMapDto<[], WsAccountRes>;
     order: EventMapDto<[CoinSymbol], WsOrderRes>;
     position: EventMapDto<[CoinSymbol], WsPositionRes>;
+  }
+
+  export interface Candle {
+    timestamp: number;
+    open: number;
+    close: number;
+    // diff: string;
+    low: number;
+    high: number;
+    volume: number;
+    currency_volume: number;
   }
 
   /**

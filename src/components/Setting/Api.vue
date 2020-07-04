@@ -2,7 +2,7 @@
   <div>
     <el-button size="mini" type="primary" slot="reference" @click="visible = true">API管理</el-button>
     <el-dialog :visible.sync="visible" fullscreen>
-      <el-button size="mini" type="primary" @click="IsCreateApi = true">新增API</el-button>
+      <el-button size="mini" type="primary" @click="CreateApiEmit" v-show="!EditerApi">新增API</el-button>
       <div v-if="IsCreateApi" style="margin-top:10px;" v-loading="loading">
         <el-input size="mini" style="margin-bottom:8px;" type="text" placeholder="请输入备注(选填)" v-model="NewApi.Desc">
           <div slot="prepend" style="width:70px;">备注</div>
@@ -17,7 +17,7 @@
           <div slot="prepend" style="width:70px;">密码</div>
         </el-input>
         <div style="text-align:right;">
-          <el-button size="mini" type="default" @click="IsCreateApi = false">取消</el-button>
+          <el-button size="mini" type="default" @click="CancelApiCreate">取消</el-button>
           <el-button size="mini" type="default" @click="TestNewApi">测试</el-button>
           <el-button size="mini" type="success" @click="CreateApi">确定</el-button>
         </div>
@@ -28,9 +28,10 @@
         <el-table-column label="操作" width="50px">
           <template slot-scope="scope">
             <el-button type="text" size="mini" @click="EditApt(scope.row)" style="margin-left:0;">编辑</el-button>
-            <el-tooltip class="item" effect="dark" content="双击删除" placement="top-end">
-              <el-button type="text" size="mini" @dblclick.native="DeleteApi(scope.row)" style="margin-left:0;">删除</el-button>
-            </el-tooltip>
+            <el-popover class="item" effect="dark" trigger="click" placement="top-end">
+              <el-button type="danger" size="mini" @click="DeleteApi(scope.row)">确认删除该API</el-button>
+              <el-button type="text" size="mini" slot="reference" style="margin-left:0;">删除</el-button>
+            </el-popover>
           </template>
         </el-table-column>
       </el-table>
@@ -45,6 +46,7 @@ import { Loading } from '@/lib/loading';
 import { SecretKey } from '@/types/Secret';
 import { sleep } from '@/lib/utils';
 import { FMex } from '@/api/FMex';
+import { MyConfig } from '../../config';
 
 export const Setting = {
   Name: 'SettingApi',
@@ -65,6 +67,20 @@ export default class SettingApi extends Vue {
     Desc: '',
     Pwd: '',
   };
+
+  CreateApiEmit() {
+    if (this.$AppStore.localState.NetEnv === 'fmextest.net') {
+      this.NewApi.Desc = '测试网只读API';
+      this.NewApi.Key = MyConfig.TestApi.Key;
+      this.NewApi.Secret = MyConfig.TestApi.Secret;
+    }
+    this.IsCreateApi = true;
+  }
+
+  CancelApiCreate() {
+    this.IsCreateApi = false;
+    this.EditerApi = null;
+  }
 
   async EditApt(api: SecretKey) {
     console.log(api);
@@ -91,7 +107,7 @@ export default class SettingApi extends Vue {
       if (sec.Error()) return this.$message.error(sec.Msg);
       Secret = sec.Data;
     }
-    const fmex = new FMex.Api(this.NewApi.Key, this.NewApi.Secret);
+    const fmex = new FMex.Api(this.NewApi.Key, Secret);
     const data = await fmex.FetchBalance();
     if (data.Error()) return this.$message.error(data.Msg);
     this.$message.success('api 可用');

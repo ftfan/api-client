@@ -8,13 +8,14 @@ class Store extends Data {
 
     ChooseKey: false,
     ChooseKeyResolve: (data: any) => {
-      //
+      console.log(data);
     },
   };
 
   readonly sessionState = {};
 
   readonly localState = {
+    NetEnv: 'fmextest.net',
     Setting: {
       affiliate_code: 'pd56gp', // 市商ID
       OpenNotification: false, // 桌面通知
@@ -22,6 +23,24 @@ class Store extends Data {
       FMexApiBaseUrlSign: 'api.fmextest.net', // 当前 api 签名使用域名
       FMexWssBaseUrl: 'api.fmextest.net', // 当前 wss 请求地址
       FMexWssBaseUrlSign: 'api.fmextest.net', // 当前 wss 签名使用域名
+    },
+    SettingBak: {
+      'fmex.com': {
+        affiliate_code: '', // 市商ID
+        OpenNotification: false, // 桌面通知
+        FMexApiBaseUrl: 'api.fmex.com', // 当前 api 请求地址
+        FMexApiBaseUrlSign: 'api.fmex.com', // 当前 api 签名使用域名
+        FMexWssBaseUrl: 'api.fmex.com', // 当前 wss 请求地址
+        FMexWssBaseUrlSign: 'api.fmex.com', // 当前 wss 签名使用域名
+      },
+      'fmextest.net': {
+        affiliate_code: 'pd56gp', // 市商ID
+        OpenNotification: false, // 桌面通知
+        FMexApiBaseUrl: 'api.fmextest.net', // 当前 api 请求地址
+        FMexApiBaseUrlSign: 'api.fmextest.net', // 当前 api 签名使用域名
+        FMexWssBaseUrl: 'api.fmextest.net', // 当前 wss 请求地址
+        FMexWssBaseUrlSign: 'api.fmextest.net', // 当前 wss 签名使用域名
+      },
     },
   };
 

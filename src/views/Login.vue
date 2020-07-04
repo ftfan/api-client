@@ -18,7 +18,7 @@ import { sleep } from '../lib/utils';
 import { Loading } from '@/lib/loading';
 
 @Component
-export default class Home extends Vue {
+export default class Login extends Vue {
   loading = false;
   pwd = '';
 
@@ -32,7 +32,7 @@ export default class Home extends Vue {
   }
 
   mounted() {
-    ipcRenderer.send('size', 500, 400, true);
+    ipcRenderer.send('main-win-size', 500, 400, true);
   }
 
   @Loading()
@@ -62,7 +62,7 @@ export default class Home extends Vue {
 <style scoped lang="scss">
 .login {
   text-align: center;
-  background-color: $color-main;
+  background-color: rgba($color-main, 0.8);
   overflow: hidden;
 }
 .tips {

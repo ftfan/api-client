@@ -2,8 +2,10 @@
 
 import { app, protocol, BrowserWindow, ipcMain, powerSaveBlocker } from 'electron';
 import { autoUpdater } from 'electron-updater';
-import path from 'path';
 import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
+import { MyConfig } from './config';
+import { MyEventsInstall } from './background/MyEvents';
+import lodash from 'lodash';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -15,20 +17,9 @@ protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { secure: tru
 
 async function createWindow() {
   // Create the browser window.
-  win = new BrowserWindow({
-    width: 800,
-    height: 600,
-    frame: false,
-    transparent: true,
-    webPreferences: {
-      webSecurity: false,
-      // Use pluginOptions.nodeIntegration, leave this alone
-      // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
-      nodeIntegration: (process.env.ELECTRON_NODE_INTEGRATION as unknown) as boolean,
-    },
-    icon: path.join(__static, 'icon.png'),
-  });
+  win = new BrowserWindow(lodash.merge({}, MyConfig.BrowserWindowOption));
 
+  // console.log(process.env.WEBPACK_DEV_SERVER_URL, process.env);
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL as string);
@@ -93,26 +84,34 @@ app.on('ready', async () => {
   createWindow();
 });
 
+MyEventsInstall();
+
 // 关闭窗口
-ipcMain.on('close', () => {
+ipcMain.on('main-win-close', () => {
   if (!win) return;
   win.close();
   app.quit();
 });
 
-ipcMain.on('size', (hevent, width: number, height: number, animate: boolean) => {
+// 显示主窗口
+ipcMain.on('main-win-show', () => {
+  if (!win) return;
+  win.show();
+});
+
+ipcMain.on('main-win-size', (hevent, width: number, height: number, animate: boolean) => {
   if (!win) return;
   win.setContentSize(width, height, animate);
 });
 
 // 最小化窗口
-ipcMain.on('minimize', () => {
+ipcMain.on('main-win-minimize', () => {
   if (!win) return;
   win.minimize();
 });
 
 //最大化窗口
-ipcMain.on('maximize', () => {
+ipcMain.on('main-win-maximize', () => {
   if (!win) return;
   if (win.isMaximized()) {
     win.unmaximize();

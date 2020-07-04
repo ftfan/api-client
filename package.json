@@ -15,15 +15,23 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@types/bignumber.js": "^5.0.0",
+    "@types/echarts": "^4.6.3",
+    "@types/moment": "^2.13.0",
     "axios": "^0.19.2",
+    "bignumber.js": "^9.0.0",
     "core-js": "^3.6.5",
     "cryptico": "^1.0.2",
+    "echarts": "^4.8.0",
+    "lodash": "^4.17.15",
+    "moment": "^2.27.0",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^8.4.2",
     "vue-router": "^3.2.0"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.157",
     "@types/node": "^12.12.6",
     "@typescript-eslint/eslint-plugin": "^2.33.0",
     "@typescript-eslint/parser": "^2.33.0",

@@ -1,11 +1,14 @@
 <template>
   <div id="app">
     <div class="control">
+      <!-- 首页 -->
       <div v-if="$route.name === 'Home'" class="exit GetTired" @click="GoBack">登出</div>
+
+      <!-- 其他非首页与非登录页 -->
       <div v-else-if="$route.name !== 'Login'" class="exit GetTired el-icon-s-home" @click="GoBack"></div>
       <div class="bg g-abs g-drag">{{ $AppStore.state.title }}</div>
-      <div class="el-icon-minus GetTired" @click="WinAction('minimize')"></div>
-      <div class="el-icon-close GetTired" @click="WinAction('close')"></div>
+      <div class="el-icon-minus GetTired" @click="WinAction('main-win-minimize')"></div>
+      <div class="el-icon-close GetTired" @click="WinAction('main-win-close')"></div>
     </div>
     <!-- <div class="ui-item"></div>
     <div class="ui-item"></div> -->
@@ -41,7 +44,12 @@ export default class App extends Vue {
       this.$UserStore.LoginOut();
       this.$router.replace({ name: 'Login' });
     } else {
-      this.$router.replace({ name: 'Home' });
+      // 策略
+      if (this.$route.path.match('/Runner/')) {
+        ipcRenderer.send('main-win-show');
+      } else {
+        this.$router.replace({ name: 'Home' });
+      }
     }
     // this.$UserStore.LoginOut();
     // this.$router.replace({ name: 'Login' });

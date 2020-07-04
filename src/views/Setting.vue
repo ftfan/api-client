@@ -30,7 +30,7 @@ Cpts.sort((a, b) => b.Sort - a.Sort);
 export default class Setting extends Vue {
   Cpts = Cpts;
   mounted() {
-    ipcRenderer.send('size', 500, 400, true);
+    ipcRenderer.send('main-win-size', 500, 400, true);
   }
 }
 </script>
