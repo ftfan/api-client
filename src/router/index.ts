@@ -3,7 +3,7 @@ import VueRouter, { RouteConfig } from 'vue-router';
 
 Vue.use(VueRouter);
 
-const RunnerRoutes: Array<RouteConfig> = [{ path: '', name: 'Runner' }];
+const RunnerRoutes: Array<RouteConfig> = [];
 
 const routes: Array<RouteConfig> = [
   { path: '/', name: 'Home', component: () => import('@/views/Home.vue') },
@@ -20,10 +20,10 @@ const routes: Array<RouteConfig> = [
 // 策略声明注入
 const requireComponent = (require as any).context('@/views/Runner', true, /[\w]+\.vue$/);
 requireComponent.keys().forEach((fileName: any) => {
-  const modName = fileName.replace(/\.\//, '').replace(/\.vue/, '');
+  let modName = fileName.replace(/\.\//, '').replace(/\.vue/, '');
   const mod = requireComponent(fileName);
   if (!mod.Setting) return;
-  // console.log(modName);
+  if (modName === 'index') modName = '';
   RunnerRoutes.push({
     path: `${modName}`,
     name: `Runner${modName}`,

@@ -1,26 +1,31 @@
 <template>
   <div class="Order" v-loading="loading">
-    <el-button type="primary" size="small" @click="visible = true">新增</el-button>
+    <el-button type="success" size="small" @click="visible = true">新增挂单</el-button>
 
-    <el-table :data="tableData">
+    <el-tag type="info" v-if="$DataStore.state.LastData" size="mini" style="margin-left:4px;"> 【{{ $DataStore.state.LastData.ts | DateFormat }}】价格： {{ $DataStore.state.LastData.Price }} </el-tag>
+    <el-table :data="tableData" size="mini">
+      <el-table-column label="排序" width="50px">
+        <el-button slot-scope="scope" @click="SortUp(scope.row)" type="success" icon="el-icon-top" size="mini" circle></el-button>
+      </el-table-column>
       <el-table-column prop="OrderNum" label="下单次数"></el-table-column>
       <el-table-column prop="EndNum" label="成交/取消"></el-table-column>
-      <el-table-column prop="OrderId" label="订单ID"></el-table-column>
-      <el-table-column label="订单信息">
+      <!-- <el-table-column prop="OrderId" label="订单ID"></el-table-column> -->
+      <el-table-column label="订单价格">
         <template slot-scope="scope">
-          <el-tag v-if="scope.row.Data">{{ scope.row.Data.price }}：{{ scope.row.Data.quantity }}张</el-tag>
+          <span v-if="scope.row.Data">{{ scope.row.Data.price }}({{ scope.row.Percent | toFixed(2) }}%)</span>
         </template>
       </el-table-column>
       <el-table-column prop="MinPercent" label="挂单范围">
-        <el-tag slot-scope="scope">{{ scope.row.MinPercent }}% ~ {{ scope.row.MaxPercent }}%</el-tag>
+        <span slot-scope="scope">{{ scope.row.MinPercent }}% ~ {{ scope.row.MaxPercent }}%</span>
       </el-table-column>
       <el-table-column prop="Amount" label="挂单张数"></el-table-column>
       <el-table-column prop="Side" label="方向">
-        <el-tag slot-scope="scope">{{ scope.row.Side === 'buy' ? '买单' : '卖单' }}</el-tag>
+        <el-tag slot-scope="scope" size="mini" :type="scope.row.Side === 'buy' ? 'success' : 'warning'">{{ scope.row.Side === 'buy' ? '买单' : '卖单' }}</el-tag>
       </el-table-column>
       <el-table-column label="操作">
         <div slot-scope="scope">
-          <el-button size="mini" @click="DeleteData(scope.row)">删除</el-button>
+          <el-button type="text" size="mini" @click="DeleteData(scope.row)">删除</el-button>
+          <el-switch v-model="scope.row.IsRun" @input="IsRunChange(scope.row)" active-color="#13ce66"></el-switch>
         </div>
       </el-table-column>
     </el-table>
@@ -90,6 +95,13 @@ export default class Order extends Vue {
     // ipcRenderer.send('main-win-size', 800, 740, true);
   }
 
+  IsRunChange(item: FMexNoOrder) {
+    if (!item.IsRun) {
+      this.$RunnerOrder.CancelOrder(item);
+    }
+    this.$RunnerOrder.Run();
+  }
+
   async DeleteData(item: FMexNoOrder) {
     await this.$confirm('确定删除？如果有订单会自动撤单');
     const index = this.tableData.indexOf(item);
@@ -103,6 +115,14 @@ export default class Order extends Vue {
       if (res.Error()) return this.$message.error(res.Msg);
     }
     this.$message.success('删除完成');
+  }
+
+  SortUp(item: FMexNoOrder) {
+    const index = this.tableData.indexOf(item);
+    if (index <= 0) return;
+    const bak = this.tableData[index - 1];
+    this.tableData.splice(index - 1, 1, item);
+    this.tableData.splice(index, 1, bak);
   }
 
   CreateNoOrder() {

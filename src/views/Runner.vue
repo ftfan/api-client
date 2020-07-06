@@ -1,7 +1,7 @@
 <template>
   <div class="Runner" v-loading="loading">
     <div class="clearfix">
-      <div v-for="cpt in Cpts" :key="cpt.Name" @click="OpenRunner(cpt)" class="item">
+      <div v-for="cpt in Cpts" :key="cpt.Name" :class="{ active: $route.path === cpt.VuePath }" @click="OpenRunner(cpt)" class="item">
         {{ cpt.Text }}
       </div>
     </div>
@@ -38,10 +38,6 @@ export default class Runner extends Vue {
   Cpts = Cpts;
   loading = false;
 
-  @Watch('$route')
-  OnRouteChange() {
-    if (this.$route.name === 'Runner') ipcRenderer.send('main-win-size', 500, 400, true);
-  }
   mounted() {
     // 启动行情监控程序
     this.$DataStore.Run();
@@ -73,6 +69,9 @@ export default class Runner extends Vue {
     &:hover {
       box-shadow: 0 0 4px 1px #fff;
       border-radius: 8px;
+    }
+    &.active {
+      background-color: rgba(0, 72, 90, 0.7);
     }
   }
 }

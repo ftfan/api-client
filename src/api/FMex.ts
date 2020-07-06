@@ -39,7 +39,12 @@ export namespace FMex {
           // 有返回数据
           if (error.response) {
             // 有实体
-            if (error.response.data) return Promise.resolve({ data: new CodeObj(error.response.data.status || Code.Error, error.response.data, error.response.data.msg) });
+            if (error.response.data) {
+              const code = error.response.data.status || Code.Error;
+              const msg = error.response.data.msg || error.response.data.message;
+              return Promise.resolve({ data: new CodeObj(code, error.response.data, msg) });
+            }
+
             return Promise.resolve({ data: new CodeObj(error.response.status || Code.Error, null, String(error)) });
           }
           return Promise.resolve({ data: new CodeObj(Code.Error, null, String(error)) });
@@ -63,6 +68,11 @@ export namespace FMex {
 
     async SetLeverage(symbol: string, leverage: number) {
       return this.api.post(`/v3/contracts/positions/${symbol}/leverage`, { leverage }).then((res) => res.data as CodeObj<any>);
+    }
+
+    async CreateOrder(body: any) {
+      body.affiliate_code = Vue.AppStore.localState.Setting.affiliate_code;
+      return this.api.post(`/v3/contracts/orders`, body).then((res) => res.data as CodeObj<any>);
     }
 
     /**

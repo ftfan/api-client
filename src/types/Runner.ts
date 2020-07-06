@@ -1,4 +1,6 @@
 import { MyBrowserWindow } from '@/lib/BrowserWindow';
+import { IdCreate } from '@/lib/utils';
+import { FMex } from '@/api/FMex';
 
 export class RunnerSetting {
   Name = '';
@@ -39,5 +41,7 @@ export class FMexNoOrder {
   Data: any = null; // 数据
   OrderNum = 0;
   EndNum = 0; // 被成交次数
-  Id = (Math.random() * 10000).toString(16);
+  IsRun = false;
+  Percent = 0; // 当前价格的百分比
+  Id = IdCreate();
 }

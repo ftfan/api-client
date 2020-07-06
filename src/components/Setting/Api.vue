@@ -3,6 +3,7 @@
     <el-button size="mini" type="primary" slot="reference" @click="visible = true">API管理</el-button>
     <el-dialog :visible.sync="visible" fullscreen>
       <el-button size="mini" type="primary" @click="CreateApiEmit" v-show="!EditerApi">新增API</el-button>
+      <span>可以保存多个，运行时，默认选中第一个</span>
       <div v-if="IsCreateApi" style="margin-top:10px;" v-loading="loading">
         <el-input size="mini" style="margin-bottom:8px;" type="text" placeholder="请输入备注(选填)" v-model="NewApi.Desc">
           <div slot="prepend" style="width:70px;">备注</div>
@@ -23,9 +24,12 @@
         </div>
       </div>
       <el-table border v-else :data="$UserStore.localState.SecretKeys" size="mini" style="width:100%;">
+        <el-table-column label="排序" width="50px">
+          <el-button slot-scope="scope" @click="SortUp(scope.row)" type="success" icon="el-icon-top" size="mini" circle></el-button>
+        </el-table-column>
         <el-table-column prop="Desc" label="备注"></el-table-column>
         <el-table-column prop="Key" label="Key" width="250px"></el-table-column>
-        <el-table-column label="操作" width="50px">
+        <el-table-column label="操作" fixed="right" width="50px">
           <template slot-scope="scope">
             <el-button type="text" size="mini" @click="EditApt(scope.row)" style="margin-left:0;">编辑</el-button>
             <el-popover class="item" effect="dark" trigger="click" placement="top-end">
@@ -87,6 +91,14 @@ export default class SettingApi extends Vue {
     Object.assign(this.NewApi, api);
     this.EditerApi = api;
     this.IsCreateApi = true;
+  }
+
+  SortUp(api: SecretKey) {
+    const index = this.$UserStore.localState.SecretKeys.indexOf(api);
+    if (index <= 0) return;
+    const bak = this.$UserStore.localState.SecretKeys[index - 1];
+    this.$UserStore.localState.SecretKeys.splice(index - 1, 1, api);
+    this.$UserStore.localState.SecretKeys.splice(index, 1, bak);
   }
 
   async DeleteApi(api: SecretKey) {
