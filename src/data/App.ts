@@ -26,7 +26,7 @@ class Store extends Data {
     },
     SettingBak: {
       'fmex.com': {
-        affiliate_code: '', // 市商ID
+        affiliate_code: 'roj5ek', // 市商ID
         OpenNotification: false, // 桌面通知
         FMexApiBaseUrl: 'api.fmex.com', // 当前 api 请求地址
         FMexApiBaseUrlSign: 'api.fmex.com', // 当前 api 签名使用域名

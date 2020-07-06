@@ -48,6 +48,8 @@ class Store extends Data {
       { id: '.btcusdpi8h', name: '溢价8H指数', value: 0, time: 0 },
       { id: '.btcusdpimax', name: '最大溢价边界值指数', value: 0, time: 0 },
     ],
+
+    Runing: false, // 运行
   };
 
   readonly sessionState = {};

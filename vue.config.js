@@ -26,10 +26,19 @@ module.exports = {
     https: false,
     hotOnly: false,
     proxy: {
-      '/fmex': {
-        // target: 'https://api.fmex.d73e969.com',
+      '/api.fmex.com': {
+        target: 'https://api.fmex.com',
+        pathRewrite: { '^/api.fmex.com': '' },
+        onProxyReq(proxyReq, req, res) {
+          proxyReq.removeHeader('x-forwarded-port');
+          proxyReq.removeHeader('x-forwarded-host');
+          proxyReq.removeHeader('x-forwarded-proto');
+          proxyReq.removeHeader('x-forwarded-for');
+        },
+      },
+      '/api.fmextest.net': {
         target: 'https://api.fmextest.net',
-        pathRewrite: { '^/fmex': '' },
+        pathRewrite: { '^/api.fmextest.net': '' },
         onProxyReq(proxyReq, req, res) {
           proxyReq.removeHeader('x-forwarded-port');
           proxyReq.removeHeader('x-forwarded-host');

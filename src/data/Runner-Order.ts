@@ -5,6 +5,7 @@ import { CodeObj, Code } from '@/types/Code';
 import lodash from 'lodash';
 import { FMex } from '@/api/FMex';
 import moment from 'moment';
+import { sleep } from '@/lib/utils';
 
 /**
  * 挂单程序思路
@@ -37,20 +38,22 @@ class Store extends Data {
       Vue.DataStore.state.DataVue.$on('candle', this.state.RunFunThrottle);
       Vue.DataStore.state.DataVue.$on('depth', this.state.RunFunThrottle);
       this.CheckOrder();
-      setInterval(this.CheckOrder.bind(this), 60000);
     }, 2000);
+    setInterval(this.CheckOrder.bind(this), 60000);
   }
 
   /**
    * 获取订单数据，校准挂单信息
    */
   async CheckOrder(): Promise<any> {
+    if (!Vue.DataStore.state.Runing) return Promise.resolve(false);
     const api = await Vue.UserStore.GetFirstApiHandler();
     if (api.Error()) return Vue.prototype.$message.error(api.Msg);
     const res = await api.Data.Orders();
     if (res.Error()) {
       // 出错了。继续调用，
       Vue.prototype.$message.error(res.Msg);
+      await sleep(2000);
       return this.CheckOrder();
     }
     if (!res.Data.result) return;
@@ -77,6 +80,7 @@ class Store extends Data {
    * 对挂单进行判断
    */
   Run() {
+    if (!Vue.DataStore.state.Runing) return Promise.resolve(false);
     if (!Vue.DataStore.state.ticker) return;
     console.log('Runner-Order-Run');
     const CurrentDayStr = moment(new Date()).format('YYYY-MM-DD');
@@ -90,10 +94,19 @@ class Store extends Data {
       }
       if (!item.Data) return this.CreateOrder(item); // 还没有订单的，去补充订单信息
 
-      const BasePrice = item.Side === FMex.SideEnum.Buy ? BuyPrice : SellPrice;
-      item.Percent = (Math.abs(BasePrice - item.Data.price) / BasePrice) * 100;
+      if (item.OrderType === 'long') {
+        const BasePrice = item.Side === FMex.SideEnum.Buy ? BuyPrice : SellPrice;
+        item.Percent = (Math.abs(BasePrice - item.Data.price) / BasePrice) * 100;
+        if (item.Percent <= item.MinPercent || item.Percent >= item.MaxPercent) return this.CancelOrder(item);
+      } else {
+        if (item.Side === 'buy') {
+          item.Percent = (BuyPrice * 10 - item.Data.price * 10) / 5 + 1;
+        } else {
+          item.Percent = (item.Data.price * 10 - SellPrice * 10) / 5 + 1;
+        }
+        if (item.Percent < item.MinPercent || item.Percent > item.MaxPercent) return this.CancelOrder(item);
+      }
 
-      if (item.Percent <= item.MinPercent || item.Percent >= item.MaxPercent) return this.CancelOrder(item);
       if (moment(new Date(item.Data.created_at)).format('YYYY-MM-DD') !== CurrentDayStr) return this.CancelOrder(item); // 昨天的订单。取消掉
     });
   }
@@ -126,16 +139,28 @@ class Store extends Data {
       if (!Vue.DataStore.state.ticker) return new CodeObj(Code.Error);
       const api = await Vue.UserStore.GetFirstApiHandler();
       if (api.Error()) return Vue.prototype.$message.error(api.Msg);
+
+      let price = 0;
+      if (item.OrderType === 'long') {
+        price = ((basePrice, direct) => {
+          const diff = ((item.MinPercent + item.MaxPercent) / 200) * direct;
+          const price = Math.round(basePrice * 2 * (1 + diff));
+          return price / 2;
+        })(Vue.DataStore.state.ticker.ticker[0], item.Side === 'buy' ? -1 : 1);
+      } else {
+        const depthv = Math.ceil((item.MinPercent + item.MaxPercent) / 2);
+        if (item.Side === 'buy') {
+          price = (Vue.DataStore.state.ticker.ticker[2] * 10 - 5 * (depthv - 1)) / 10;
+        } else {
+          price = (Vue.DataStore.state.ticker.ticker[4] * 10 + 5 * (depthv - 1)) / 10;
+        }
+      }
       api.Data.CreateOrder({
         symbol: 'BTCUSD_P',
         type: 'LIMIT',
         direction: item.Side === 'buy' ? 'LONG' : 'SHORT',
         post_only: true,
-        price: ((basePrice, direct) => {
-          const diff = ((item.MinPercent + item.MaxPercent) / 200) * direct;
-          const price = Math.round(basePrice * 2 * (1 + diff));
-          return price / 2;
-        })(Vue.DataStore.state.ticker.ticker[0], item.Side === 'buy' ? -1 : 1),
+        price: price,
         quantity: item.Amount,
       }).then((res) => {
         this.state.PromiseMap[item.Id] = null;

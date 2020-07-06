@@ -1,5 +1,8 @@
 <template>
-  <div class="RunnerIndex" v-loading="loading"></div>
+  <div class="RunnerIndex" v-loading="loading">
+    开启这个开关，才会运行挂单等程序：
+    <el-switch v-model="$DataStore.state.Runing" active-color="#13ce66"></el-switch>
+  </div>
 </template>
 
 <script lang="ts">

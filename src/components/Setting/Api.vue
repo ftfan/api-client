@@ -25,7 +25,7 @@
       </div>
       <el-table border v-else :data="$UserStore.localState.SecretKeys" size="mini" style="width:100%;">
         <el-table-column label="排序" width="50px">
-          <el-button slot-scope="scope" @click="SortUp(scope.row)" type="success" icon="el-icon-top" size="mini" circle></el-button>
+          <el-button slot-scope="scope" v-if="scope.$index !== 0" @click="SortUp(scope.row, scope)" type="success" icon="el-icon-top" size="mini" circle></el-button>
         </el-table-column>
         <el-table-column prop="Desc" label="备注"></el-table-column>
         <el-table-column prop="Key" label="Key" width="250px"></el-table-column>

@@ -10,7 +10,7 @@ export namespace FMex {
     api!: AxiosInstance;
     constructor(AccessKey: string, AccessSecret: string) {
       const _axios = (this.api = axios.create({
-        baseURL: location.hostname === 'localhost' ? '/fmex' : `https://${Vue.AppStore.localState.Setting.FMexApiBaseUrl}`,
+        baseURL: location.hostname === 'localhost' ? `/${Vue.AppStore.localState.Setting.FMexApiBaseUrl}` : `https://${Vue.AppStore.localState.Setting.FMexApiBaseUrl}`,
         timeout: 10000,
       }));
 

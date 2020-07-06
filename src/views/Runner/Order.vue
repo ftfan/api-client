@@ -5,7 +5,7 @@
     <el-tag type="info" v-if="$DataStore.state.LastData" size="mini" style="margin-left:4px;"> 【{{ $DataStore.state.LastData.ts | DateFormat }}】价格： {{ $DataStore.state.LastData.Price }} </el-tag>
     <el-table :data="tableData" size="mini">
       <el-table-column label="排序" width="50px">
-        <el-button slot-scope="scope" @click="SortUp(scope.row)" type="success" icon="el-icon-top" size="mini" circle></el-button>
+        <el-button slot-scope="scope" v-if="scope.$index !== 0" @click="SortUp(scope.row)" type="success" icon="el-icon-top" size="mini" circle></el-button>
       </el-table-column>
       <el-table-column prop="OrderNum" label="下单次数"></el-table-column>
       <el-table-column prop="EndNum" label="成交/取消"></el-table-column>
@@ -16,7 +16,8 @@
         </template>
       </el-table-column>
       <el-table-column prop="MinPercent" label="挂单范围">
-        <span slot-scope="scope">{{ scope.row.MinPercent }}% ~ {{ scope.row.MaxPercent }}%</span>
+        <span slot-scope="scope" v-if="scope.row.OrderType === 'long'">{{ scope.row.MinPercent }}% ~ {{ scope.row.MaxPercent }}%</span>
+        <span slot-scope="scope" v-else>档位{{ scope.row.MinPercent }} ~ 档位{{ scope.row.MaxPercent }}</span>
       </el-table-column>
       <el-table-column prop="Amount" label="挂单张数"></el-table-column>
       <el-table-column prop="Side" label="方向">
@@ -42,14 +43,30 @@
       </el-input>
       <hr />
 
-      <el-input size="mini" style="width:320px;margin: 0 2px;" v-model.number="TempData.MinPercent" type="number">
-        <template slot="prepend">挂单范围(小)</template>
-        <template slot="append">%</template>
-      </el-input>
-      <el-input size="mini" style="width:320px;margin: 0 2px;" v-model.number="TempData.MaxPercent" type="number">
-        <template slot="prepend">挂单范围(大)</template>
-        <template slot="append">%</template>
-      </el-input>
+      <el-radio-group v-model="TempData.OrderType" size="mini">
+        <el-radio-button label="long">远端挂单</el-radio-button>
+        <el-radio-button label="short">近端挂单</el-radio-button>
+      </el-radio-group>
+      <template v-if="TempData.OrderType === 'long'">
+        <el-input size="mini" style="width:320px;margin: 0 2px;" v-model.number="TempData.MinPercent" type="number">
+          <template slot="prepend">挂单范围(起始)</template>
+          <template slot="append">%</template>
+        </el-input>
+        <el-input size="mini" style="width:320px;margin: 0 2px;" v-model.number="TempData.MaxPercent" type="number">
+          <template slot="prepend">挂单范围(结束)</template>
+          <template slot="append">%</template>
+        </el-input>
+      </template>
+      <template v-else>
+        <el-input size="mini" style="width:320px;margin: 0 2px;" v-model.number="TempData.MinPercent" type="number">
+          <template slot="prepend">档位范围(起始)</template>
+          <template slot="append">档</template>
+        </el-input>
+        <el-input size="mini" style="width:320px;margin: 0 2px;" v-model.number="TempData.MaxPercent" type="number">
+          <template slot="prepend">档位范围(结束)</template>
+          <template slot="append">档</template>
+        </el-input>
+      </template>
 
       <span slot="footer" class="dialog-footer">
         <el-button @click="visible = false">取 消</el-button>

@@ -37,6 +37,7 @@ export class FMexNoOrder {
   OrderId = '';
   MinPercent = 1; // 挂单百分比
   MaxPercent = 2; // 挂单百分比
+  OrderType = 'long'; // 远端挂单类型。 short 近端
   Amount = 1; // 挂单数量
   Data: any = null; // 数据
   OrderNum = 0;
