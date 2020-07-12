@@ -10,7 +10,9 @@ import lodash from 'lodash';
 class Store extends Data {
   readonly state = {
     fmex: null as FMex.Api | null,
+    wssAuthed: false,
     fmex_key_secret: '',
+    fmex_key_secret_wss: '',
   };
 
   readonly sessionState = {
@@ -146,6 +148,9 @@ class Store extends Data {
     return success;
   }
 
+  /**
+   * 获取第一个 api 的 handler
+   */
   async GetFirstApiHandler(): Promise<CodeObj<FMex.Api>> {
     if (!this.sessionState.login) return Promise.resolve(new CodeObj(Code.Error, null as any, '未登录'));
 
@@ -160,6 +165,23 @@ class Store extends Data {
     this.state.fmex = new FMex.Api(api.Key, sec.Data);
     this.state.fmex_key_secret = fmex_key_secret;
     return Promise.resolve(new CodeObj(Code.Success, this.state.fmex));
+  }
+
+  async GetFirstWssHandler(): Promise<CodeObj<any>> {
+    if (!this.sessionState.login) return Promise.resolve(new CodeObj(Code.Error, null as any, '未登录'));
+
+    const api = this.localState.SecretKeys[0];
+    if (!api) return Promise.resolve(new CodeObj(Code.Error, null as any, '还未设置 api ！'));
+
+    const fmex_key_secret_wss = api.Key + api.Secret;
+    if (fmex_key_secret_wss === this.state.fmex_key_secret_wss && this.state.wssAuthed) return Promise.resolve(new CodeObj(Code.Success, this.state.wssAuthed));
+
+    const sec = await this.SecretParse(api.Secret, this.sessionState.pwd);
+    if (sec.Error()) return sec as any;
+    Vue.DataStore.WssAuth(api.Key, sec.Data);
+    this.state.wssAuthed = true;
+    this.state.fmex_key_secret_wss = fmex_key_secret_wss;
+    return Promise.resolve(new CodeObj(Code.Success, this.state.wssAuthed));
   }
 }
 

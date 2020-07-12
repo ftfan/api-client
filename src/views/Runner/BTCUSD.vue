@@ -87,7 +87,7 @@ export default class BTCUSD extends Vue {
     if (!myChart) return;
     const candles = this.$DataStore.state.candles.map((item) => {
       return {
-        timestamp: item.id * 1000,
+        timestamp: item.timestamp,
         open: item.open,
         close: item.close,
         // diff: string;

@@ -38,9 +38,10 @@ export default class Runner extends Vue {
   Cpts = Cpts;
   loading = false;
 
-  mounted() {
+  async mounted() {
     // 启动行情监控程序
     this.$DataStore.Run();
+    await this.$nextTick();
     ipcRenderer.send('main-win-size', 800, 740, true);
   }
 

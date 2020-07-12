@@ -62,7 +62,12 @@ export namespace FMex {
       return this.api.get(`/v3/contracts/orders/open`).then((res) => res.data as CodeObj<any>);
     }
 
-    async OrderCancel(id: string) {
+    // 查询订单
+    async OrderById(id: string | number) {
+      return this.api.get(`/v3/contracts/orders/${id}`).then((res) => res.data as CodeObj<OrderDto>);
+    }
+
+    async OrderCancel(id: string | number) {
       return this.api.post(`/v3/contracts/orders/${id}/cancel`).then((res) => res.data as CodeObj<any>);
     }
 
@@ -97,6 +102,8 @@ export namespace FMex {
     private wsOpen!: Promise<any>; // 使用ws的时候需要等待
     private event = new Vue(); // 使用 Vue ，作为事件管理者
     private subList: string[] = [];
+    private key = '';
+    private secret = '';
     // private baseUrl = `wss://www.fmextest.net/api/web/ws`;
     baseUrl = '';
     // 最后一次呼吸返回
@@ -118,11 +125,27 @@ export namespace FMex {
         console.error('close', err);
         this.wssConn();
         await this.wsOpen;
-        this.subList.forEach((type) => this.send({ cmd: 'sub', args: [type] }));
+        const MaxListenNum = 20;
+        for (let i = 0; i < this.subList.length; i += 20) {
+          const end = Math.min(i + MaxListenNum, this.subList.length);
+          const types = this.subList.slice(i, end);
+          this.send({ cmd: 'sub', args: [...types] });
+        }
       });
     }
 
     private wssConn() {
+      if (this.key && this.secret) {
+        const time = Date.now().toString();
+        const secret = `GEThttps://${Vue.AppStore.localState.Setting.FMexWssBaseUrlSign}/v2/user/ws${time}`;
+        const signtmp = crypto
+          .createHmac('sha1', this.secret)
+          .update(new Buffer(secret).toString('base64'))
+          .digest()
+          .toString('base64');
+        const url = `wss://${Vue.AppStore.localState.Setting.FMexWssBaseUrl}/v2/user/ws?FC-ACCESS-KEY=${this.key}&FC-ACCESS-TIMESTAMP=${time}&FC-ACCESS-SIGNATURE=${signtmp}`;
+        this.baseUrl = url;
+      }
       this.ws = new WebSocket(this.baseUrl || `wss://${Vue.AppStore.localState.Setting.FMexWssBaseUrl}/v2/ws`);
       this.wsOpen = new Promise((resolve) => (this.ws.onopen = resolve));
       this.ws.onmessage = this.onmessage.bind(this);
@@ -135,7 +158,9 @@ export namespace FMex {
         const data = JSON.parse(ev.data.toString()) as WsResponse;
         if (data.type && typeof data.type === 'string') this.event.$emit(data.type, data);
         if (data.id && typeof data.id === 'string') this.event.$emit(data.id, data);
-        if ((data as any).status) console.error(data); // 怀疑出错了
+        if ((data as any).status) {
+          Vue.prototype.$message.error('wss: ' + (data as any).msg);
+        }
       } catch (e) {
         console.error(`err msg`, e);
         this.event.$emit('error', e);
@@ -150,8 +175,9 @@ export namespace FMex {
       this.event.$emit('close', ev);
     }
 
-    private send(data: any) {
+    private async send(data: any) {
       try {
+        await this.wsOpen;
         this.ws.send(JSON.stringify(data));
       } catch (e) {
         console.error('send error', e);
@@ -163,15 +189,8 @@ export namespace FMex {
     }
 
     auth(AccessKey: string, AccessSecret: string) {
-      const time = Date.now().toString();
-      const secret = `GEThttps://${Vue.AppStore.localState.Setting.FMexWssBaseUrlSign}/v2/user/ws${time}`;
-      const signtmp = crypto
-        .createHmac('sha1', AccessSecret)
-        .update(new Buffer(secret).toString('base64'))
-        .digest()
-        .toString('base64');
-      const url = `wss://${Vue.AppStore.localState.Setting.FMexWssBaseUrl}/v2/user/ws?FC-ACCESS-KEY=${AccessKey}&FC-ACCESS-TIMESTAMP=${time}&FC-ACCESS-SIGNATURE=${signtmp}`;
-      this.baseUrl = url;
+      this.key = AccessKey;
+      this.secret = AccessSecret;
       this.closeWs();
       // this.event.$emit('close');
       // this.wssConn();
@@ -362,30 +381,32 @@ export namespace FMex {
   export interface WsDepthDeltaRes extends WsDepthRes {
     pre_seq: number;
   }
+
+  export interface OrderDto {
+    id: 订单ID;
+    quantity: 订单数量;
+    direction: 仓位方向;
+    features: number;
+    price: number;
+    fill_price: 成交均价;
+    unfilled_quantity: 未成交数量;
+    symbol: CoinSymbol;
+    margin_currency: 保证金Currency;
+    fee: 手续费;
+    type: 订单类型;
+    status: 订单状态;
+    trigger_direction: 仓位方向;
+    trigger_on: Stop订单的触发价格_非Stop订单触发价格始终为0;
+    trailing_base_price: TrailingStop订单的基准价格_非此类型订单则始终为0;
+    trailing_distance: TrailingStop订单的触发价格距离_非此类型订单则始终为0;
+    created_at: number;
+  }
   export interface WsOrderRes {
     type: string;
-    order: {
-      id: 订单ID;
-      quantity: 订单数量;
-      direction: 仓位方向;
-      features: number;
-      price: number;
-      fill_price: 成交均价;
-      unfilled_quantity: 未成交数量;
-      symbol: CoinSymbol;
-      margin_currency: 保证金Currency;
-      fee: 手续费;
-      type: 订单类型;
-      status: 订单状态;
-      trigger_direction: 仓位方向;
-      trigger_on: Stop订单的触发价格_非Stop订单触发价格始终为0;
-      trailing_base_price: TrailingStop订单的基准价格_非此类型订单则始终为0;
-      trailing_distance: TrailingStop订单的触发价格距离_非此类型订单则始终为0;
-      created_at: number;
-    };
+    order: OrderDto;
     ts: number;
   }
-  export type 仓位方向 = 'LONG' | 'SHORT';
+  export type 仓位方向 = 'long' | 'short';
   export type 订单ID = number;
   export type 定序ID = number;
   export type 订单类型 = 'LIMIT' | 'MARKET';
@@ -459,6 +480,7 @@ export namespace FMex {
     data: CandelRes[];
   }
   export interface CandelRes {
+    timestamp: number; // 自添加字段
     id: number;
     seq: number;
     open: number;
@@ -546,13 +568,14 @@ export namespace FMex {
   }
 
   export enum OrderState {
-    submitted = 'submitted', //  已提交
+    pending = 'pending', // 已提交
     partial_filled = 'partial_filled', // 部分成交
-    partial_canceled = 'partial_canceled', // 部分成交已撤销
-    filled = 'filled', // 完全成交
-    canceled = 'canceled', // 已撤销
-    pending_cancel = 'pending_cancel', // 撤销已提交
+    fully_filled = 'fully_filled', // 全部成交
+    partial_canceled = 'partial_canceled', // 部分取消
+    fully_canceled = 'fully_canceled', // 全部取消
   }
+
+  export const OrderStateEnded = [OrderState.partial_canceled, OrderState.fully_canceled, OrderState.fully_filled];
 
   export interface OrderResult {
     id: string;

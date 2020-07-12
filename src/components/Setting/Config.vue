@@ -63,7 +63,7 @@ export default class SettingConfig extends Vue {
     return this.$AppStore.localState.Setting;
   }
 
-  NetEnvChange(val: string) {
+  async NetEnvChange(val: string) {
     const cache = this.$AppStore.localState;
     if (val === 'fmex.com') {
       cache.SettingBak['fmextest.net'] = cache.Setting;
@@ -73,7 +73,8 @@ export default class SettingConfig extends Vue {
       cache.Setting = cache.SettingBak[val];
     }
     cache.NetEnv = val;
-    this.$message.success('环境切换成功，注意不同环境的API等数据无法通用');
+    await this.$alert('环境切换成功，注意不同环境的API等数据无法通用');
+    location.reload();
   }
 
   onSubmit() {

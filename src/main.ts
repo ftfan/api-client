@@ -21,6 +21,7 @@ process.on('unhandledRejection', (error) => {
 import '@/data/App';
 import '@/data/User';
 import '@/data/Data';
+import '@/data/Runner-WinOrLose';
 import './lib/loading';
 import './lib/filter';
 

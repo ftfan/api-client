@@ -46,3 +46,21 @@ export class FMexNoOrder {
   Percent = 0; // 当前价格的百分比
   Id = IdCreate();
 }
+
+export class WinOrLoseOrder {
+  Order: FMex.OrderDto; // 原始订单
+  WinOrder: FMex.OrderDto | null;
+  quantity: number;
+  diff: number;
+  diffP: number;
+  LoseOrder: FMex.OrderDto | null;
+  error = '';
+  constructor(order: FMex.OrderDto) {
+    this.Order = order;
+    this.WinOrder = null;
+    this.LoseOrder = null;
+    this.diff = 0;
+    this.diffP = 0;
+    this.quantity = order.quantity - order.unfilled_quantity;
+  }
+}

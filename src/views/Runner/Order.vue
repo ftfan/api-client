@@ -12,14 +12,18 @@
       <!-- <el-table-column prop="OrderId" label="订单ID"></el-table-column> -->
       <el-table-column label="订单价格">
         <template slot-scope="scope">
-          <span v-if="scope.row.Data">{{ scope.row.Data.price }}({{ scope.row.Percent | toFixed(2) }}%)</span>
+          <span v-if="scope.row.Data">
+            {{ scope.row.Data.price }}
+            <template v-if="scope.row.OrderType === 'long'">({{ scope.row.Percent | toFixed(2) }}%)</template>
+            <template v-else>({{ scope.row.Side === 'buy' ? '买' : '卖' }}{{ scope.row.Percent }})</template>
+          </span>
         </template>
       </el-table-column>
       <el-table-column prop="MinPercent" label="挂单范围">
         <span slot-scope="scope" v-if="scope.row.OrderType === 'long'">{{ scope.row.MinPercent }}% ~ {{ scope.row.MaxPercent }}%</span>
-        <span slot-scope="scope" v-else>档位{{ scope.row.MinPercent }} ~ 档位{{ scope.row.MaxPercent }}</span>
+        <span slot-scope="scope" v-else>{{ scope.row.Side === 'buy' ? '买' : '卖' }}{{ scope.row.MinPercent }} ~ {{ scope.row.Side === 'buy' ? '买' : '卖' }}{{ scope.row.MaxPercent }}</span>
       </el-table-column>
-      <el-table-column prop="Amount" label="挂单张数"></el-table-column>
+      <el-table-column prop="Amount" label="挂单 USD"></el-table-column>
       <el-table-column prop="Side" label="方向">
         <el-tag slot-scope="scope" size="mini" :type="scope.row.Side === 'buy' ? 'success' : 'warning'">{{ scope.row.Side === 'buy' ? '买单' : '卖单' }}</el-tag>
       </el-table-column>
@@ -38,8 +42,8 @@
       </el-radio-group>
       <hr />
       <el-input size="mini" style="width:230px;" v-model.number="TempData.Amount" type="number">
-        <template slot="prepend">数量</template>
-        <template slot="append">张</template>
+        <template slot="prepend">金额</template>
+        <template slot="append">USD</template>
       </el-input>
       <hr />
 
@@ -95,8 +99,6 @@ export const Setting = new RunnerSetting({
   VuePath: '/Runner/Order',
 });
 
-const myChart = null as any;
-
 @Component
 export default class Order extends Vue {
   loading = false;
@@ -148,8 +150,8 @@ export default class Order extends Vue {
     const MinPercent = this.TempData.MinPercent;
     const MaxPercent = this.TempData.MaxPercent;
     const Amount = this.TempData.Amount;
-    if (isNaN(MinPercent) || isNaN(MaxPercent) || MinPercent >= MaxPercent) return this.$message.error('范围填写错误');
-    if (isNaN(Amount) || Amount < 1) return this.$message.error('张数错误');
+    if (isNaN(MinPercent) || isNaN(MaxPercent) || MinPercent > MaxPercent) return this.$message.error('范围填写错误');
+    if (isNaN(Amount) || Amount < 1) return this.$message.error('USD金额错误');
     this.TempData.MinPercent = MinPercent;
     this.TempData.MaxPercent = MaxPercent;
     this.TempData.Amount = Amount;

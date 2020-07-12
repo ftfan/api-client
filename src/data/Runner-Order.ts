@@ -5,7 +5,6 @@ import { CodeObj, Code } from '@/types/Code';
 import lodash from 'lodash';
 import { FMex } from '@/api/FMex';
 import moment from 'moment';
-import { sleep } from '@/lib/utils';
 
 /**
  * 挂单程序思路
@@ -37,33 +36,20 @@ class Store extends Data {
       Vue.DataStore.state.DataVue.$on('ticker', this.state.RunFunThrottle);
       Vue.DataStore.state.DataVue.$on('candle', this.state.RunFunThrottle);
       Vue.DataStore.state.DataVue.$on('depth', this.state.RunFunThrottle);
-      this.CheckOrder();
+      Vue.DataStore.state.DataVue.$on('CheckOrder', this.CheckOrder.bind(this));
     }, 2000);
-    setInterval(this.CheckOrder.bind(this), 60000);
   }
 
   /**
    * 获取订单数据，校准挂单信息
    */
-  async CheckOrder(): Promise<any> {
+  async CheckOrder(resData: any): Promise<any> {
     if (!Vue.DataStore.state.Runing) return Promise.resolve(false);
-    const api = await Vue.UserStore.GetFirstApiHandler();
-    if (api.Error()) return Vue.prototype.$message.error(api.Msg);
-    const res = await api.Data.Orders();
-    if (res.Error()) {
-      // 出错了。继续调用，
-      Vue.prototype.$message.error(res.Msg);
-      await sleep(2000);
-      return this.CheckOrder();
-    }
-    if (!res.Data.result) return;
-    if (!res.Data.result.length) return;
-    console.log(res.Data);
     // 遍历一遍当前的挂单列表，校对里面认为有订单的信息；
     this.localState.OrderList.forEach((item) => {
       if (!item.IsRun) return;
       if (!item.Data) return; // 没有订单，无法校准。目前没有唯一标志可以校验。
-      const order = res.Data.result.filter((order: any) => order.id === item.Data.id)[0];
+      const order = resData.result.filter((order: any) => order.id === item.Data.id)[0];
       // 订单丢失
       if (!order) {
         Vue.prototype.$message.error('订单丢失:' + item.OrderId);
@@ -80,7 +66,7 @@ class Store extends Data {
    * 对挂单进行判断
    */
   Run() {
-    if (!Vue.DataStore.state.Runing) return Promise.resolve(false);
+    if (!Vue.DataStore.state.Runing) return;
     if (!Vue.DataStore.state.ticker) return;
     console.log('Runner-Order-Run');
     const CurrentDayStr = moment(new Date()).format('YYYY-MM-DD');
@@ -113,17 +99,24 @@ class Store extends Data {
 
   // 挂单数据取消订单
   async CancelOrder(item: FMexNoOrder) {
+    if (!item.OrderId) return;
     const key = item.Id + ':cancel';
     if (this.state.PromiseMap[key]) return this.state.PromiseMap[key];
     return (this.state.PromiseMap[key] = new Promise(async (resolve) => {
       const api = await Vue.UserStore.GetFirstApiHandler();
       if (api.Error()) return Vue.prototype.$message.error(api.Msg);
-      api.Data.OrderCancel(item.OrderId).then((res) => {
-        this.state.PromiseMap[key] = null;
+      api.Data.OrderCancel(item.OrderId).then(async (res) => {
+        delete this.state.PromiseMap[key];
         if (res.Error()) {
-          Vue.prototype.$message.error(res.Msg);
-          // 1797 订单未发现，姑且认定为已取消
-          if ([1797].indexOf(res.Code) === -1) return; // 非 【订单已取消、已失效等状态】
+          // Vue.prototype.$message.error(res.Msg);
+          const ord = await api.Data.OrderById(item.OrderId);
+          if (ord.Error()) return Vue.prototype.$message.error(ord.Msg);
+          res.Data = ord.Data;
+        }
+        // 被成交的订单
+        if (res.Data && FMex.OrderStateEnded.indexOf(res.Data.status) > -1) {
+          item.EndNum++;
+          Vue.WinOrLose.AddOrder(res.Data);
         }
         item.Data = null;
         item.OrderId = '';
@@ -163,11 +156,12 @@ class Store extends Data {
         price: price,
         quantity: item.Amount,
       }).then((res) => {
-        this.state.PromiseMap[item.Id] = null;
+        delete this.state.PromiseMap[item.Id];
         if (res.Error()) return Vue.prototype.$message.error(res.Msg);
         item.Data = res.Data;
         item.OrderId = res.Data.id;
         item.OrderNum = (item.OrderNum || 0) + 1;
+        this.Run();
       });
     }));
   }

@@ -15,7 +15,7 @@
           <el-tag class="tag" size="mini">最新价: {{ $DataStore.state.ticker.ticker[0] }}</el-tag>
           <el-tag class="tag" size="mini">买一: {{ $DataStore.state.ticker.ticker[2] }}</el-tag>
           <el-tag class="tag" size="mini">卖一: {{ $DataStore.state.ticker.ticker[4] }}</el-tag>
-          <el-tag class="tag" size="mini">24小时成交: {{ $DataStore.state.ticker.ticker[9] }} 张,（量: {{ $DataStore.state.ticker.ticker[10] }}）</el-tag>
+          <el-tag class="tag" size="mini">24小时成交: {{ $DataStore.state.ticker.ticker[9] }} USD,（ {{ $DataStore.state.ticker.ticker[10] }} BTC）</el-tag>
         </template>
 
         <!-- <el-tag class="tag" v-if="$DataStore.state.trade" size="mini">{{ $DataStore.state.CoinSymbol }}: {{ 0 }}({{ $DataStore.state.trade.ts | DateFormat('YYYY-MM-DD hh:mm:ss') }})</el-tag> -->
@@ -55,6 +55,7 @@ export default class AccountInfo extends Vue {
 
   @Loading()
   async mounted() {
+    this.$UserStore.GetFirstWssHandler(); ///
     this.AccountInfoShow();
     // ipcRenderer.send('main-win-size', 800, 740, true);
   }

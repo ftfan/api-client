@@ -50,6 +50,8 @@ class Store extends Data {
     ],
 
     Runing: false, // 运行
+
+    DefaultResolution: FMex.Resolution.M15,
   };
 
   readonly sessionState = {};
@@ -63,6 +65,27 @@ class Store extends Data {
   constructor() {
     super();
     this.initilization();
+    setInterval(this.CheckOrder.bind(this), 10000);
+  }
+
+  /**
+   * 获取订单数据，校准挂单信息
+   */
+  async CheckOrder(): Promise<any> {
+    if (!Vue.DataStore.state.Runing) return Promise.resolve(false);
+    const api = await Vue.UserStore.GetFirstApiHandler();
+    if (api.Error()) return Vue.prototype.$message.error(api.Msg);
+    const res = await api.Data.Orders();
+    if (res.Error()) {
+      // 出错了。继续调用，
+      Vue.prototype.$message.error(res.Msg);
+      await sleep(2000);
+      return this.CheckOrder();
+    }
+    if (!res.Data.result) return;
+    if (!res.Data.result.length) return;
+    console.log(res.Data);
+    this.state.DataVue.$emit('CheckOrder', res.Data.result);
   }
 
   /**
@@ -71,22 +94,23 @@ class Store extends Data {
    * 所以使用主窗口在策略界面启动该程序，其他窗口监听行情即可。
    */
   async Run() {
-    wss = new FMex.Ws();
+    if (!wss) wss = new FMex.Ws();
     await this.LoadSymbol(this.state.CoinSymbol);
   }
 
   async LoadSymbol(CoinSymbol: string) {
     if (!wss) return error;
     this.ListenIndex();
-    const res = await wss.req('candle', FMex.Resolution.M1, CoinSymbol, 1441, Date.now());
+    const res = await wss.req('candle', this.state.DefaultResolution, CoinSymbol, 1441, Date.now());
     if (!res.data) return error;
     this.state.candles = res.data;
     res.data.forEach((candle) => {
+      candle.timestamp = candle.id * 1000;
       this.state.candlesMap.set(candle.id, candle);
     });
 
     // 监听K线数据
-    const subCandle = wss.sub('candle', FMex.Resolution.M1, CoinSymbol);
+    const subCandle = wss.sub('candle', this.state.DefaultResolution, CoinSymbol);
     subCandle.ondata((data) => {
       const old = this.state.candlesMap.get(data.id);
       if (old) {
@@ -158,6 +182,23 @@ class Store extends Data {
         item.time = data.index[0];
         this.state.DataVue.$emit('index', data);
       });
+    });
+  }
+
+  WssAuth(key: string, sec: string) {
+    if (!wss) wss = new FMex.Ws();
+    wss.auth(key, sec);
+    wss.sub('position', this.state.CoinSymbol).ondata((res) => {
+      console.log(res);
+      this.state.DataVue.$emit('position', res);
+    });
+    wss.sub('account').ondata((res) => {
+      console.log(res);
+      this.state.DataVue.$emit('account', res);
+    });
+    wss.sub('order', this.state.CoinSymbol).ondata((res) => {
+      console.log(res);
+      this.state.DataVue.$emit('order', res);
     });
   }
 }
